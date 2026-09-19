@@ -1,19 +1,22 @@
 # 🤖 AI Chatbot
 
-A conversational AI assistant powered by Llama3.2 running locally via Ollama.
+A conversational AI assistant powered by Groq API and Llama3.
+
+## 🌍 Live Demo
+👉 https://chatbot-b5lq.onrender.com
 
 ## How it works
 - Type any question or task
-- Llama3.2 generates a response locally
+- Groq API generates a response instantly
 - Full conversation history maintained
 
 ## Tech Stack
 - Python, Flask
-- Ollama, Llama3.2:1b
-- No API keys needed — runs 100% offline!
+- Groq API, compound-mini model
+- Deployed on Render
 
 ## Run locally
-1. Install Ollama from https://ollama.com
-2. Pull the model: `ollama pull llama3.2:1b`
-3. Install dependencies: `pip install flask requests`
+1. Get a free Groq API key from https://console.groq.com
+2. Install dependencies: `pip install flask requests gunicorn`
+3. Set your key: `export GROQ_API_KEY="your-key-here"`
 4. Run: `python app.py`
