@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f1a;
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #1a1a2e;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 700px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .clear-btn {
+            background: #333;
+            border: none;
+            color: #888;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .clear-btn:hover { background: #444; color: white; }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .user-avatar { background: #6366f1; }
+        .bot-avatar { background: #a855f7; }
+        .bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .user-bubble {
+            background: #6366f1;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .user .avatar { order: 2; }
+        .user .bubble { order: 1; }
+        .bot-bubble {
+            background: #2a2a3e;
+            border-bottom-left-radius: 4px;
+        }
+        .welcome {
+            text-align: center;
+            color: #555;
+            margin: auto;
+        }
+        .welcome .icon { font-size: 3rem; margin-bottom: 12px; }
+        .welcome p { font-size: 0.9rem; }
+        .input-area {
+            padding: 16px 24px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 12px;
+        }
+        input {
+            flex: 1;
+            background: #0f0f1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: #6366f1; }
+        input::placeholder { color: #555; }
+        button.send {
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: opacity 0.2s;
+        }
+        button.send:hover { opacity: 0.9; }
+        button.send:disabled { opacity: 0.5; cursor: not-allowed; }
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #2a2a3e;
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+        .dot {
+            width: 8px; height: 8px;
+            background: #888;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Assistant</h1>
+            <button class="clear-btn" onclick="clearChat()">Clear chat</button>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="welcome" id="welcome">
+                <div class="icon">🤖</div>
+                <p>Ask me anything! I'm here to help.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="input" 
+                placeholder="Ask me anything..."
+                onkeydown="if(event.key==='Enter') sendMessage()"
+            >
+            <button class="send" onclick="sendMessage()" id="sendBtn">➤</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            document.getElementById("welcome")?.remove();
+            input.value = "";
+
+            addMessage("user", message);
+            const typing = addTyping();
+
+            document.getElementById("sendBtn").disabled = true;
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                typing.remove();
+
+                if (data.error) {
+                    addMessage("bot", "❌ " + data.error);
+                } else {
+                    addMessage("bot", data.response);
+                }
+            } catch (err) {
+                typing.remove();
+                addMessage("bot", "❌ Something went wrong. Please try again.");
+            } finally {
+                document.getElementById("sendBtn").disabled = false;
+                input.focus();
+            }
+        }
+
+        function addMessage(role, text) {
+            const messages = document.getElementById("messages");
+            const div = document.createElement("div");
+            div.className = `message ${role === "user" ? "user" : ""}`;
+            div.innerHTML = `
+                <div class="avatar ${role === "user" ? "user-avatar" : "bot-avatar"}">
+                    ${role === "user" ? "👤" : "🤖"}
+                </div>
+                <div class="bubble ${role === "user" ? "user-bubble" : "bot-bubble"}">
+                    ${text.replace(/\n/g, "<br>")}
+                </div>`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return div;
+        }
+
+        function addTyping() {
+            const messages = document.getElementById("messages");
+            const div = document.createElement("div");
+            div.className = "message";
+            div.innerHTML = `
+                <div class="avatar bot-avatar">🤖</div>
+                <div class="typing">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return div;
+        }
+
+        async function clearChat() {
+            await fetch("/clear", { method: "POST" });
+            const messages = document.getElementById("messages");
+            messages.innerHTML = `
+                <div class="welcome" id="welcome">
+                    <div class="icon">🤖</div>
+                    <p>Ask me anything! I'm here to help.</p>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
