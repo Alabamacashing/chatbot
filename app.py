@@ -27,15 +27,15 @@ def chat():
     })
 
     try:
-        response = requests.post(GROQ_API_URL, 
+        response = requests.post(GROQ_API_URL,
             headers={
                 "Authorization": f"Bearer {GROQ_API_KEY}",
                 "Content-Type": "application/json"
             },
             json={
-                "model": "groq/compound-mini",
+                "model": "compound-beta-mini",
                 "messages": [
-                    {"role": "system", "content": "You are a helpful assistant. Answer questions clearly and help users with their tasks."},
+                    {"role": "system", "content": "You are a helpful assistant."},
                     *conversation_history
                 ],
                 "max_tokens": 1024
@@ -43,9 +43,8 @@ def chat():
         )
 
         result = response.json()
-        print("Groq response:", result)  # Debug line
         assistant_message = result["choices"][0]["message"]["content"]
-        
+
         conversation_history.append({
             "role": "assistant",
             "content": assistant_message
