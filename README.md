@@ -3,7 +3,7 @@
 A conversational AI assistant powered by Groq API and Llama3.
 
 ## 🌍 Live Demo
-👉 https://chatbot-b5lq.onrender.com
+https://chatbot-frosty-shoreline-9762.fly.dev/
 
 ## How it works
 - Type any question or task
