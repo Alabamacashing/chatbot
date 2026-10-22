@@ -43,7 +43,9 @@ def chat():
         )
 
         result = response.json()
-        assistant_message = result["choices"][0]["message"]["content"]
+       print("STATUS:", response.status_code)
+       print("FULL RESPONSE:", result)
+       assistant_message = result["choices"][0]["message"]["content"]
 
         conversation_history.append({
             "role": "assistant",
