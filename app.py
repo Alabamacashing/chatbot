@@ -29,7 +29,7 @@ def chat():
             "Content-Type": "application/json"
         },
         json={
-            "model": "compound-beta-mini",
+            "model": "llama3-8b-8192",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant."},
                 *conversation_history
@@ -39,7 +39,11 @@ def chat():
     )
 
     result = response.json()
-    return jsonify({"error": str(result)})
+    assistant_message = result["choices"][0]["message"]["content"]
+
+    conversation_history.append({"role": "assistant", "content": assistant_message})
+
+    return jsonify({"response": assistant_message})
 
 @app.route("/clear", methods=["POST"])
 def clear():
